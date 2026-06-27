@@ -1,0 +1,26 @@
+{
+  "code": "de",
+  "name": "Deutsch",
+  "gregorian_months": [
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember"
+  ],
+  "gregorian_months_short": [
+    "Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+    "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"
+  ],
+  "hijri_months": [
+    "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
+    "Dschumada al-Ula", "Dschumada al-Thani", "Radschab", "Scha'ban",
+    "Ramadan", "Schawwal", "Dhul Qi'da", "Dhul Hiddscha"
+  ],
+  "hijri_months_short": [
+    "Muh", "Saf", "Rab1", "Rab2", "Dsc1", "Dsc2",
+    "Rad", "Scha", "Ram", "Sch", "DhuQ", "DhuH"
+  ],
+  "days": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+  "days_short": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+  "days_min": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+  "meridiem": { "am": "AM", "pm": "PM" },
+  "rtl": false
+}

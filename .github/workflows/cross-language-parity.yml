@@ -1,0 +1,152 @@
+name: Cross-Language Parity
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  parity:
+    name: Cross-Language Parity Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install JS dependencies
+        working-directory: packages/js
+        run: npm ci
+
+      - name: Build JS
+        working-directory: packages/js
+        run: npm run build
+
+      - name: Install Python dependencies
+        working-directory: packages/python
+        run: pip install -e .
+
+      - name: Install Go dependencies
+        working-directory: packages/go
+        run: go mod download
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction
+
+      - name: Run JS parity tests
+        run: |
+          cd packages/js
+          node -e "
+            const { UmmAlQuraCalendar } = require('./dist/index');
+            const cal = new UmmAlQuraCalendar();
+            const result = cal.gregorianToHijri(2024, 3, 15);
+            console.log(JSON.stringify({
+              hijri_year: result.output.year,
+              hijri_month: result.output.month,
+              hijri_day: result.output.day,
+              jdn: result.jdn
+            }));
+          " > /tmp/js-result.json
+
+      - name: Run Python parity tests
+        run: |
+          cd packages/python
+          python -c "
+            import json
+            from ummalqura import UmmAlQuraCalendar
+            cal = UmmAlQuraCalendar()
+            result = cal.gregorian_to_hijri(2024, 3, 15)
+            print(json.dumps({
+              'hijri_year': result.output.year,
+              'hijri_month': result.output.month,
+              'hijri_day': result.output.day,
+              'jdn': result.jdn
+            }))
+          " > /tmp/py-result.json
+
+      - name: Run Go parity tests
+        run: |
+          cd packages/go
+          cat > /tmp/go_parity.go << 'GOEOF'
+          package main
+          import (
+            "encoding/json"
+            "fmt"
+            "os"
+            ummalqura "github.com/ummalqura/ummalqura-chrono-go"
+          )
+          func main() {
+            cal, _ := ummalqura.NewCalendar("../../data/ummalqura-months.json", "en")
+            result, _ := cal.GregorianToHijri(2024, 3, 15, "")
+            h := result.Output.(ummalqura.HijriDate)
+            out := map[string]int{
+              "hijri_year": h.Year,
+              "hijri_month": h.Month,
+              "hijri_day": h.Day,
+              "jdn": result.Jdn,
+            }
+            b, _ := json.Marshal(out)
+            os.Stdout.Write(b)
+          }
+          GOEOF
+          go run /tmp/go_parity.go > /tmp/go-result.json
+
+      - name: Run PHP parity tests
+        run: |
+          cd packages/php
+          php -r '
+            require "vendor/autoload.php";
+            use UmmAlQura\UmmAlQuraCalendar;
+            $cal = new UmmAlQuraCalendar();
+            $result = $cal->gregorianToHijri(2024, 3, 15);
+            echo json_encode([
+              "hijri_year" => $result->getOutput()->getYear(),
+              "hijri_month" => $result->getOutput()->getMonth(),
+              "hijri_day" => $result->getOutput()->getDay(),
+              "jdn" => $result->getJdn()
+            ]);
+          ' > /tmp/php-result.json
+
+      - name: Cross-language parity check
+        run: |
+          python -c "
+          import json
+          results = {}
+          for lang in ['js', 'py', 'go', 'php']:
+            with open(f'/tmp/{lang}-result.json') as f:
+              results[lang] = json.load(f)
+          
+          base = results['js']
+          failed = False
+          for lang, result in results.items():
+            if result != base:
+              print(f'MISMATCH: {lang} differs from js:')
+              print(f'  js: {json.dumps(base)}')
+              print(f'  {lang}: {json.dumps(result)}')
+              failed = True
+          
+          if not failed:
+            print('All language implementations produce identical results!')
+          else:
+            exit(1)
+          "

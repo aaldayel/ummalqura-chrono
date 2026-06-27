@@ -1,0 +1,60 @@
+{
+  "name": "ummalqura-chrono",
+  "version": "1.0.0",
+  "description": "Umm al-Qura Hijri Calendar Conversion Library - Accurate conversion between Gregorian and Umm al-Qura calendars",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "vitest bench",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "hijri",
+    "islamic",
+    "calendar",
+    "umm-al-qura",
+    "saudi",
+    "date-conversion",
+    "gregorian"
+  ],
+  "author": "Umm al-Qura Calendar Contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ummalqura/ummalqura-chrono.git",
+    "directory": "packages/js"
+  },
+  "homepage": "https://github.com/ummalqura/ummalqura-chrono#readme",
+  "bugs": {
+    "url": "https://github.com/ummalqura/ummalqura-chrono/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "csv-parse": "^5.5.0",
+    "eslint": "^8.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

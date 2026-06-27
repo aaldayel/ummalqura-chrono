@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umm al-Qura Calendar Converter</title>
+    <meta name="description" content="Convert dates between Gregorian and Umm al-Qura Hijri calendars">
+    <meta name="theme-color" content="#1a56db">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+    <style>
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e40af;
+            --bg: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --border: #d1d5db;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3b82f6;
+                --primary-dark: #2563eb;
+                --bg: #111827;
+                --bg-secondary: #1f2937;
+                --text: #f9fafb;
+                --text-secondary: #9ca3af;
+                --border: #374151;
+            }
+        }
+
+        [data-theme="dark"] {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --bg: #111827;
+            --bg-secondary: #1f2937;
+            --text: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .result-details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        [data-theme="dark"] .error {
+            background: #450a0a;
+            border-color: #7f1d1d;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .date-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span id="themeIcon">🌙</span>
+    </button>
+
+    <div class="container">
+        <header>
+            <h1>Umm al-Qura Calendar</h1>
+            <p class="subtitle">Convert between Gregorian and Hijri calendars</p>
+        </header>
+
+        <div class="card">
+            <h2>Convert Date</h2>
+            <div class="form-group">
+                <label for="direction">Conversion Direction</label>
+                <select id="direction">
+                    <option value="gregorian-to-hijri">Gregorian → Hijri</option>
+                    <option value="hijri-to-gregorian">Hijri → Gregorian</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Enter Date</label>
+                <div class="date-inputs">
+                    <div>
+                        <label for="year" class="sr-only">Year</label>
+                        <input type="number" id="year" placeholder="Year" min="1300" max="1700">
+                    </div>
+                    <div>
+                        <label for="month" class="sr-only">Month</label>
+                        <input type="number" id="month" placeholder="Month" min="1" max="12">
+                    </div>
+                    <div>
+                        <label for="day" class="sr-only">Day</label>
+                        <input type="number" id="day" placeholder="Day" min="1" max="30">
+                    </div>
+                </div>
+            </div>
+
+            <button id="convertBtn">Convert</button>
+
+            <div class="error" id="error"></div>
+
+            <div class="result" id="result">
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-label">Input</div>
+                        <div class="result-value" id="inputDate"></div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Output</div>
+                        <div class="result-value" id="outputDate"></div>
+                    </div>
+                </div>
+                <div class="result-details">
+                    <span class="detail-label">Julian Day Number:</span>
+                    <span class="detail-value" id="jdn"></span>
+                    <span class="detail-label">Day of Week:</span>
+                    <span class="detail-value" id="dayOfWeek"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Today's Date</h2>
+            <div class="result-grid">
+                <div class="result-item">
+                    <div class="result-label">Gregorian</div>
+                    <div class="result-value" id="todayGregorian"></div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Hijri</div>
+                    <div class="result-value" id="todayHijri"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // This would normally import from the compiled library
+        // For demo purposes, we'll implement basic conversion inline
+        
+        const UMM_AL_QURA_LEAP_YEARS = new Set([2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29]);
+        
+        function gregorianToJdn(year, month, day) {
+            const a = Math.floor((14 - month) / 12);
+            const y = year + 4800 - a;
+            const m = month + 12 * a - 3;
+            return day + Math.floor((153 * m + 2) / 5) + 365 * y + 
+                   Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+        }
+        
+        function jdnToGregorian(jdn) {
+            const a = jdn + 32044;
+            const b = Math.floor((4 * a + 3) / 146097);
+            const c = a - Math.floor((146097 * b) / 4);
+            const d = Math.floor((4 * c + 3) / 1461);
+            const e = c - Math.floor((1461 * d) / 4);
+            const m = Math.floor((5 * e + 2) / 153);
+            return {
+                year: 100 * b + d - 4800 + Math.floor(m / 10),
+                month: m + 3 - 12 * Math.floor(m / 10),
+                day: e - Math.floor((153 * m + 2) / 5) + 1
+            };
+        }
+        
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+        
+        function setTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', theme);
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+        
+        // Check system preference
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+        }
+        
+        // Direction change
+        const direction = document.getElementById('direction');
+        const yearInput = document.getElementById('year');
+        
+        direction.addEventListener('change', () => {
+            if (direction.value === 'hijri-to-gregorian') {
+                yearInput.min = 1300;
+                yearInput.max = 1700;
+                yearInput.placeholder = 'Hijri Year';
+            } else {
+                yearInput.min = 1882;
+                yearInput.max = 2277;
+                yearInput.placeholder = 'Gregorian Year';
+            }
+        });
+        
+        // Convert button
+        const convertBtn = document.getElementById('convertBtn');
+        const errorDiv = document.getElementById('error');
+        const resultDiv = document.getElementById('result');
+        
+        convertBtn.addEventListener('click', () => {
+            errorDiv.classList.remove('show');
+            resultDiv.classList.remove('show');
+            
+            const year = parseInt(yearInput.value);
+            const month = parseInt(document.getElementById('month').value);
+            const day = parseInt(document.getElementById('day').value);
+            
+            if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                errorDiv.textContent = 'Please enter valid year, month, and day';
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            try {
+                // This is a simplified demo - in production, use the actual library
+                const jdn = gregorianToJdn(year, month, day);
+                const gregorian = jdnToGregorian(jdn);
+                
+                document.getElementById('inputDate').textContent = 
+                    `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                document.getElementById('outputDate').textContent = 
+                    `${gregorian.year}-${String(gregorian.month).padStart(2, '0')}-${String(gregorian.day).padStart(2, '0')}`;
+                document.getElementById('jdn').textContent = jdn;
+                
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                document.getElementById('dayOfWeek').textContent = days[(jdn + 1) % 7];
+                
+                resultDiv.classList.add('show');
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.add('show');
+            }
+        });
+        
+        // Set today's date
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        document.getElementById('todayGregorian').textContent = todayStr;
+        
+        // Note: In production, the Hijri date would be calculated using the actual library
+        document.getElementById('todayHijri').textContent = 'Use library for Hijri';
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>

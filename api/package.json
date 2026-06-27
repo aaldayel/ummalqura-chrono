@@ -1,0 +1,32 @@
+{
+  "name": "ummalqura-chrono-api",
+  "version": "1.0.0",
+  "description": "REST API for Umm al-Qura Calendar Conversion",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "swagger-ui-express": "^5.0.0",
+    "yamljs": "^0.3.0",
+    "ummalqura-chrono": "file:../packages/js"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "@types/swagger-ui-express": "^4.1.0",
+    "@types/yamljs": "^0.2.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  }
+}

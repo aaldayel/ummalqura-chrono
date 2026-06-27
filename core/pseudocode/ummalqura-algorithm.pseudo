@@ -1,0 +1,150 @@
+## Umm al-Qura Calendar Conversion — Reference Pseudocode
+##
+## This file serves as a language-agnostic reference for all implementations.
+## Every supported language must produce numerically identical results.
+
+## ============================================================
+## 1. CONSTANTS
+## ============================================================
+
+# Leap year positions in the 30-year cycle (mod 30)
+SET UMM_AL_QURA_LEAP_YEARS = {2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29}
+
+# Gregorian month days (non-leap year, index 0 is dummy)
+ARRAY GREGORIAN_MONTH_DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+## ============================================================
+## 2. GREGORIAN FUNCTIONS
+## ============================================================
+
+FUNCTION is_gregorian_leap_year(year: INTEGER) -> BOOLEAN:
+    RETURN (year MOD 4 = 0) AND (year MOD 100 != 0 OR year MOD 400 = 0)
+
+FUNCTION gregorian_month_length(year: INTEGER, month: INTEGER) -> INTEGER:
+    IF month = 2 AND is_gregorian_leap_year(year):
+        RETURN 29
+    RETURN GREGORIAN_MONTH_DAYS[month]
+
+## ============================================================
+## 3. GREGORIAN <-> JDN (Fliegel & Van Flandern, 1968)
+## ============================================================
+
+FUNCTION gregorian_to_jdn(year: INTEGER, month: INTEGER, day: INTEGER) -> INTEGER:
+    a = (14 - month) // 12          # Integer (floor) division
+    y = year + 4800 - a
+    m = month + 12 * a - 3
+    RETURN day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+
+FUNCTION jdn_to_gregorian(jdn: INTEGER) -> (year, month, day):
+    a = jdn + 32044
+    b = (4 * a + 3) // 146097
+    c = a - (146097 * b) // 4
+    d = (4 * c + 3) // 1461
+    e = c - (1461 * d) // 4
+    m = (5 * e + 2) // 153
+
+    day = e - (153 * m + 2) // 5 + 1
+    month = m + 3 - 12 * (m // 10)
+    year = 100 * b + d - 4800 + m // 10
+
+    RETURN (year, month, day)
+
+## ============================================================
+## 4. UMM AL-QURA <-> JDN
+## ============================================================
+
+# month_index is a hash table: "year-month" -> MonthInfo
+FUNCTION hijri_to_jdn(year: INTEGER, month: INTEGER, day: INTEGER,
+                       month_index: MAP[STRING, MonthInfo]) -> INTEGER:
+    key = FORMAT "{year}-{month}"
+    entry = month_index[key]
+    IF entry IS NULL:
+        RAISE Error(OUT_OF_RANGE)
+    RETURN entry.first_day_jdn + day - 1
+
+# sorted_months is sorted by first_day_jdn ascending
+FUNCTION jdn_to_hijri(jdn: INTEGER, sorted_months: ARRAY[MonthInfo]) -> (year, month, day):
+    IF LEN(sorted_months) = 0:
+        RAISE Error(EMPTY_TABLE)
+    IF jdn < sorted_months[0].first_day_jdn:
+        RAISE Error(OUT_OF_RANGE, "JDN before supported range")
+
+    left = 0
+    right = LEN(sorted_months) - 1
+
+    WHILE left < right:
+        mid = (left + right) // 2
+        IF sorted_months[mid].first_day_jdn <= jdn:
+            left = mid + 1
+        ELSE:
+            right = mid
+
+    # Clamp to valid range
+    IF left >= LEN(sorted_months):
+        left = LEN(sorted_months) - 1
+    ELSE IF left > 0 AND sorted_months[left].first_day_jdn > jdn:
+        left = left - 1
+
+    entry = sorted_months[left]
+    day = jdn - entry.first_day_jdn + 1
+    RETURN (entry.hijri_year, entry.hijri_month, day)
+
+## ============================================================
+## 5. DAY OF WEEK
+## ============================================================
+
+FUNCTION day_of_week_from_jdn(jdn: INTEGER) -> DayOfWeek:
+    index = (jdn + 1) MOD 7   # JDN 0 = Monday, so Sunday = 0
+    RETURN DayOfWeek(index, names_en[index], names_ar[index])
+
+## ============================================================
+## 6. VALIDATION
+## ============================================================
+
+FUNCTION validate_gregorian(year, month, day, min_year, max_year) -> Error | NULL:
+    IF month < 1 OR month > 12: RETURN Error(INVALID_MONTH)
+    IF year < min_year OR year > max_year: RETURN Error(INVALID_YEAR)
+    max_day = gregorian_month_length(year, month)
+    IF day < 1 OR day > max_day: RETURN Error(INVALID_DAY)
+    RETURN NULL
+
+FUNCTION validate_hijri(year, month, day, month_index, min_year, max_year) -> Error | NULL:
+    IF month < 1 OR month > 12: RETURN Error(INVALID_MONTH)
+    IF min_year IS NULL:
+        min_year = MINIMUM of hijri_year from month_index values
+    IF max_year IS NULL:
+        max_year = MAXIMUM of hijri_year from month_index values
+    IF year < min_year OR year > max_year: RETURN Error(INVALID_YEAR)
+    key = FORMAT "{year}-{month}"
+    entry = month_index[key]
+    IF entry IS NULL: RETURN Error(OUT_OF_RANGE)
+    IF day < 1 OR day > entry.month_length: RETURN Error(INVALID_DAY)
+    RETURN NULL
+
+## ============================================================
+## 7. DATA INDEXING
+## ============================================================
+
+FUNCTION build_month_index(months: ARRAY[MonthInfo]) -> MAP[STRING, MonthInfo]:
+    index = EMPTY_MAP
+    FOR EACH m IN months:
+        key = FORMAT "{m.hijri_year}-{m.hijri_month}"
+        index[key] = m
+    RETURN index
+
+FUNCTION build_jdn_index(months: ARRAY[MonthInfo]) -> ARRAY[MonthInfo]:
+    sorted = COPY(months)
+    SORT sorted BY first_day_jdn ASCENDING
+    RETURN sorted
+
+## ============================================================
+## 8. REFERENCE VALUES
+## ============================================================
+## These values MUST match across all implementations:
+##
+##   gregorian_to_jdn(2024, 3, 15)                = 2460385
+##   jdn_to_gregorian(2460385)                    = (2024, 3, 15)
+##   first_day_jdn for 1 Muharram 1300 AH          = 2402132
+##   gregorian_to_jdn(1882, 11, 24)                = 2402132
+##   gregorianToHijri(2024, 3, 15) -> output        = (1445, 9, 5)
+##   hijriToGregorian(1445, 9, 5) -> output          = (2024, 3, 15)

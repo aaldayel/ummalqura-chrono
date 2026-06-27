@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <RootNamespace>UmmAlQura</RootNamespace>
+    <AssemblyName>UmmAlQura</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>Umm al-Qura Calendar Contributors</Authors>
+    <Description>Umm al-Qura Hijri Calendar Conversion Library - Accurate conversion between Gregorian and Umm al-Qura calendars</Description>
+    <PackageTags>hijri;islamic;calendar;umm-al-qura;saudi;date-conversion;gregorian</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../data/ummalqura-months.json" Pack="true" PackagePath="data/" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,26 @@
+{
+  "code": "tr",
+  "name": "Türkçe",
+  "gregorian_months": [
+    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+  ],
+  "gregorian_months_short": [
+    "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+    "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
+  ],
+  "hijri_months": [
+    "Muharrem", "Safer", "Rebiülevvel", "Rebiülahir",
+    "Cemaziyelevvel", "Cemaziyelahir", "Recep", "Şaban",
+    "Ramazan", "Şevval", "Zilkade", "Zilhicce"
+  ],
+  "hijri_months_short": [
+    "Muh", "Saf", "Ra1", "Ra2", "Ca1", "Ca2",
+    "Rec", "Şab", "Ram", "Şev", "Zka", "Zhi"
+  ],
+  "days": ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
+  "days_short": ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"],
+  "days_min": ["Pa", "Pt", "Sa", "Ça", "Pe", "Cu", "Ct"],
+  "meridiem": { "am": "ÖÖ", "pm": "ÖS" },
+  "rtl": false
+}

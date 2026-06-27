@@ -1,0 +1,26 @@
+{
+  "code": "ms",
+  "name": "Bahasa Melayu",
+  "gregorian_months": [
+    "Januari", "Februari", "Mac", "April", "Mei", "Jun",
+    "Julai", "Ogos", "September", "Oktober", "November", "Disember"
+  ],
+  "gregorian_months_short": [
+    "Jan", "Feb", "Mac", "Apr", "Mei", "Jun",
+    "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"
+  ],
+  "hijri_months": [
+    "Muharam", "Safar", "Rabiulawal", "Rabiulakhir",
+    "Jamadilawal", "Jamadilakhir", "Rejab", "Syaaban",
+    "Ramadan", "Syawal", "Zulkaedah", "Zulhijjah"
+  ],
+  "hijri_months_short": [
+    "Muh", "Saf", "Raw", "Rak", "Jaw", "Jak",
+    "Rej", "Sya", "Ram", "Syw", "Zka", "Zhi"
+  ],
+  "days": ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"],
+  "days_short": ["Ahd", "Isn", "Sel", "Rab", "Kha", "Jum", "Sab"],
+  "days_min": ["A", "I", "S", "R", "K", "J", "S"],
+  "meridiem": { "am": "PG", "pm": "PTG" },
+  "rtl": false
+}

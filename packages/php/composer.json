@@ -1,0 +1,28 @@
+{
+    "name": "ummalqura-chrono/ummalqura-chrono",
+    "description": "Umm al-Qura Hijri Calendar Conversion Library",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["hijri", "islamic", "calendar", "umm-al-qura", "saudi"],
+    "authors": [
+        {
+            "name": "Umm al-Qura Calendar Contributors"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/ummalqura/ummalqura-chrono/issues",
+        "source": "https://github.com/ummalqura/ummalqura-chrono"
+    },
+    "autoload": {
+        "psr-4": {
+            "UmmAlQura\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+}

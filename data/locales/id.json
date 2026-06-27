@@ -1,0 +1,26 @@
+{
+  "code": "id",
+  "name": "Bahasa Indonesia",
+  "gregorian_months": [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ],
+  "gregorian_months_short": [
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+  ],
+  "hijri_months": [
+    "Muharam", "Safar", "Rabiul Awal", "Rabiul Akhir",
+    "Jumadil Awal", "Jumadil Akhir", "Rajab", "Syakban",
+    "Ramadan", "Syawal", "Zulkaidah", "Zulhijah"
+  ],
+  "hijri_months_short": [
+    "Muh", "Saf", "Raw", "Rak", "Jaw", "Jak",
+    "Raj", "Sya", "Ram", "Syw", "Zka", "Zhi"
+  ],
+  "days": ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"],
+  "days_short": ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"],
+  "days_min": ["Mi", "Sn", "Sl", "Ra", "Ka", "Ju", "Sa"],
+  "meridiem": { "am": "AM", "pm": "PM" },
+  "rtl": false
+}

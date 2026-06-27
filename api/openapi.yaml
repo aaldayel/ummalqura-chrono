@@ -1,0 +1,629 @@
+openapi: 3.1.0
+info:
+  title: Umm al-Qura Calendar Conversion API
+  description: |
+    REST API for converting dates between Gregorian and Umm al-Qura Hijri calendars.
+    
+    ## Features
+    - Single and batch date conversion
+    - Date validation
+    - Day of week calculation
+    - Month calendar generation
+    - Multi-language support (Arabic, English, etc.)
+    
+    ## Calendar System
+    The Umm al-Qura calendar is the official civil calendar of the Kingdom of Saudi Arabia,
+    published by King Abdulaziz City for Science and Technology (KACST).
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/ummalqura/ummalqura-chrono
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/v1
+    description: Local development server
+  - url: https://api.ummalqura.org/v1
+    description: Production server
+
+paths:
+  /convert:
+    post:
+      summary: Convert a single date between calendars
+      description: |
+        Convert a date from one calendar system to another.
+        Supports Gregorian ↔ Umm al-Qura Hijri conversion.
+      operationId: convertDate
+      tags:
+        - Conversion
+      parameters:
+        - name: locale
+          in: query
+          description: BCP 47 language tag for localized month/day names
+          schema:
+            type: string
+            default: en
+            example: ar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversionRequest'
+            examples:
+              gregorianToHijri:
+                summary: Gregorian to Hijri
+                value:
+                  year: 2024
+                  month: 3
+                  day: 15
+                  from: gregorian
+                  to: hijri-ummalqura
+              hijriToGregorian:
+                summary: Hijri to Gregorian
+                value:
+                  year: 1445
+                  month: 9
+                  day: 5
+                  from: hijri-ummalqura
+                  to: gregorian
+      responses:
+        '200':
+          description: Successful conversion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /convert/batch:
+    post:
+      summary: Convert a list of dates in one request
+      description: |
+        Batch convert multiple dates in a single request.
+        All dates must use the same source and target calendars.
+      operationId: batchConvertDates
+      tags:
+        - Conversion
+      parameters:
+        - name: locale
+          in: query
+          description: BCP 47 language tag for localized month/day names
+          schema:
+            type: string
+            default: en
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchConversionRequest'
+            examples:
+              batchGregorianToHijri:
+                summary: Batch Gregorian to Hijri
+                value:
+                  dates:
+                    - year: 2024
+                      month: 3
+                      day: 15
+                    - year: 2024
+                      month: 3
+                      day: 16
+                    - year: 2024
+                      month: 3
+                      day: 17
+                  from: gregorian
+                  to: hijri-ummalqura
+      responses:
+        '200':
+          description: Successful batch conversion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchConversionResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /today:
+    get:
+      summary: Return today's date in both calendars
+      description: |
+        Get today's date in both Gregorian and Hijri calendars,
+        based on the specified timezone.
+      operationId: getToday
+      tags:
+        - Utility
+      parameters:
+        - name: timezone
+          in: query
+          description: IANA timezone name or UTC offset
+          required: true
+          schema:
+            type: string
+            examples:
+              - Asia/Riyadh
+              - UTC
+              - +03:00
+        - name: locale
+          in: query
+          description: BCP 47 language tag
+          schema:
+            type: string
+            default: en
+      responses:
+        '200':
+          description: Today's date in both calendars
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayResponse'
+        '400':
+          description: Invalid timezone
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /calendar/{calendar}/{year}/{month}:
+    get:
+      summary: Return all days in a given month with both representations
+      description: |
+        Get a complete month calendar with all days showing both
+        Gregorian and Hijri representations.
+      operationId: getMonthCalendar
+      tags:
+        - Calendar
+      parameters:
+        - name: calendar
+          in: path
+          description: Calendar system
+          required: true
+          schema:
+            type: string
+            enum:
+              - gregorian
+              - hijri-ummalqura
+        - name: year
+          in: path
+          description: Year
+          required: true
+          schema:
+            type: integer
+            examples:
+              - 2024
+              - 1445
+        - name: month
+          in: path
+          description: Month (1-12)
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: locale
+          in: query
+          description: BCP 47 language tag
+          schema:
+            type: string
+            default: en
+      responses:
+        '200':
+          description: Month calendar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthCalendarResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /validate:
+    get:
+      summary: Validate a date without converting it
+      description: |
+        Check if a date is valid in the specified calendar system.
+        Returns validation result without performing conversion.
+      operationId: validateDate
+      tags:
+        - Validation
+      parameters:
+        - name: calendar
+          in: query
+          description: Calendar system
+          required: true
+          schema:
+            type: string
+            enum:
+              - gregorian
+              - hijri-ummalqura
+        - name: year
+          in: query
+          description: Year
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          description: Month (1-12)
+          required: true
+          schema:
+            type: integer
+        - name: day
+          in: query
+          description: Day
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /day-of-week:
+    get:
+      summary: Return the day of week for a given date
+      description: |
+        Get the day of week information for a date in any supported calendar.
+      operationId: getDayOfWeek
+      tags:
+        - Utility
+      parameters:
+        - name: calendar
+          in: query
+          description: Calendar system
+          required: true
+          schema:
+            type: string
+            enum:
+              - gregorian
+              - hijri-ummalqura
+        - name: year
+          in: query
+          description: Year
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          description: Month (1-12)
+          required: true
+          schema:
+            type: integer
+        - name: day
+          in: query
+          description: Day
+          required: true
+          schema:
+            type: integer
+        - name: locale
+          in: query
+          description: BCP 47 language tag
+          schema:
+            type: string
+            default: en
+      responses:
+        '200':
+          description: Day of week information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayOfWeekResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Liveness check
+      description: |
+        Health check endpoint returning library version and data-file checksum.
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    ConversionRequest:
+      type: object
+      required:
+        - year
+        - month
+        - day
+        - from
+        - to
+      properties:
+        year:
+          type: integer
+          description: Year
+          example: 2024
+        month:
+          type: integer
+          description: Month (1-12)
+          minimum: 1
+          maximum: 12
+          example: 3
+        day:
+          type: integer
+          description: Day
+          minimum: 1
+          maximum: 31
+          example: 15
+        from:
+          type: string
+          description: Source calendar
+          enum:
+            - gregorian
+            - hijri-ummalqura
+          example: gregorian
+        to:
+          type: string
+          description: Target calendar
+          enum:
+            - gregorian
+            - hijri-ummalqura
+          example: hijri-ummalqura
+
+    ConversionResponse:
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/CalendarDate'
+        output:
+          $ref: '#/components/schemas/CalendarDate'
+        jdn:
+          type: integer
+          description: Julian Day Number
+          example: 2460385
+        day_of_week:
+          $ref: '#/components/schemas/DayOfWeek'
+        locale:
+          type: string
+          example: en
+        library_version:
+          type: string
+          example: 1.0.0
+        data_version:
+          type: string
+          example: 2024-01
+
+    BatchConversionRequest:
+      type: object
+      required:
+        - dates
+        - from
+        - to
+      properties:
+        dates:
+          type: array
+          items:
+            type: object
+            required:
+              - year
+              - month
+              - day
+            properties:
+              year:
+                type: integer
+              month:
+                type: integer
+              day:
+                type: integer
+          minItems: 1
+          maxItems: 1000
+        from:
+          type: string
+          enum:
+            - gregorian
+            - hijri-ummalqura
+        to:
+          type: string
+          enum:
+            - gregorian
+            - hijri-ummalqura
+
+    BatchConversionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversionResponse'
+        total:
+          type: integer
+          example: 3
+
+    CalendarDate:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 1445
+        month:
+          type: integer
+          example: 9
+        day:
+          type: integer
+          example: 5
+        calendar:
+          type: string
+          enum:
+            - gregorian
+            - hijri-ummalqura
+          example: hijri-ummalqura
+
+    DayOfWeek:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Day index (0=Sunday, 6=Saturday)
+          example: 5
+        name_en:
+          type: string
+          example: Friday
+        name_ar:
+          type: string
+          example: الجمعة
+
+    TodayResponse:
+      type: object
+      properties:
+        gregorian:
+          $ref: '#/components/schemas/CalendarDate'
+        hijri:
+          $ref: '#/components/schemas/CalendarDate'
+        jdn:
+          type: integer
+        day_of_week:
+          $ref: '#/components/schemas/DayOfWeek'
+        timezone:
+          type: string
+          example: Asia/Riyadh
+        locale:
+          type: string
+          example: en
+
+    MonthCalendarResponse:
+      type: object
+      properties:
+        calendar:
+          type: string
+          enum:
+            - gregorian
+            - hijri-ummalqura
+        year:
+          type: integer
+        month:
+          type: integer
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              gregorian:
+                $ref: '#/components/schemas/CalendarDate'
+              hijri:
+                $ref: '#/components/schemas/CalendarDate'
+              jdn:
+                type: integer
+              day_of_week:
+                $ref: '#/components/schemas/DayOfWeek'
+        month_name_en:
+          type: string
+        month_name_ar:
+          type: string
+
+    ValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        error:
+          $ref: '#/components/schemas/ErrorResponse'
+
+    DayOfWeekResponse:
+      type: object
+      properties:
+        calendar:
+          type: string
+        year:
+          type: integer
+        month:
+          type: integer
+        day:
+          type: integer
+        day_of_week:
+          $ref: '#/components/schemas/DayOfWeek'
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        library_version:
+          type: string
+          example: 1.0.0
+        data_version:
+          type: string
+          example: 2024-01
+        data_checksum:
+          type: string
+          example: 2bb8a0409f3d94c4...
+        supported_hijri_range:
+          type: object
+          properties:
+            start:
+              type: integer
+              example: 1300
+            end:
+              type: integer
+              example: 1700
+
+    ErrorResponse:
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: string
+          enum:
+            - INVALID_DAY
+            - INVALID_MONTH
+            - INVALID_YEAR
+            - OUT_OF_RANGE
+            - UNSUPPORTED_CALENDAR
+            - INVALID_TIMEZONE
+            - MALFORMED_INPUT
+          example: INVALID_DAY
+        message:
+          type: string
+          example: Day 30 does not exist in Hijri month 1445-09, which has 29 days.
+        field:
+          type: string
+          example: day
+        value:
+          oneOf:
+            - type: integer
+            - type: string
+          example: 30

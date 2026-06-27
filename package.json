@@ -1,0 +1,21 @@
+{
+  "name": "ummalqura-chrono",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Umm al-Qura Calendar Conversion Library - Monorepo",
+  "workspaces": [
+    "packages/js",
+    "api",
+    "cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

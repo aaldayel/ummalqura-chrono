@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ummalqura-chrono"
+version = "1.0.0"
+description = "Umm al-Qura Hijri Calendar Conversion Library - Accurate conversion between Gregorian and Umm al-Qura calendars"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+keywords = ["hijri", "islamic", "calendar", "umm-al-qura", "saudi", "date-conversion", "gregorian"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/ummalqura/ummalqura-chrono"
+Documentation = "https://github.com/ummalqura/ummalqura-chrono#readme"
+Repository = "https://github.com/ummalqura/ummalqura-chrono"
+Issues = "https://github.com/ummalqura/ummalqura-chrono/issues"
+
+[[project.authors]]
+name = "Umm al-Qura Calendar Contributors"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ummalqura*"]
+
+[tool.setuptools.package-data]
+ummalqura = ["data/ummalqura-months.json", "data/locales/*.json"]
+
+[tool.setuptools.data-files]
+"share/ummalqura" = ["../../data/ummalqura-months.json"]
+"share/ummalqura/locales" = ["../../data/locales/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

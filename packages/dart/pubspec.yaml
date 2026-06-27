@@ -1,0 +1,17 @@
+name: ummalqura_chrono
+description: Umm al-Qura Hijri Calendar Conversion Library - Accurate conversion between Gregorian and Umm al-Qura calendars
+version: 1.0.0
+homepage: https://github.com/ummalqura/ummalqura-chrono
+repository: https://github.com/ummalqura/ummalqura-chrono
+issue_tracker: https://github.com/ummalqura/ummalqura-chrono/issues
+license: MIT
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  path: ^1.8.0
+
+dev_dependencies:
+  test: ^1.24.0
+  lints: ^3.0.0

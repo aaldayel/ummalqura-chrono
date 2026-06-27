@@ -1,0 +1,22 @@
+{
+  "name": "ummalqura-chrono-cli",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Umm al-Qura Calendar Conversion CLI",
+  "license": "MIT",
+  "main": "index.ts",
+  "bin": {
+    "uaq": "./index.ts"
+  },
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "ummalqura-chrono": "file:../packages/js"
+  },
+  "devDependencies": {
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}

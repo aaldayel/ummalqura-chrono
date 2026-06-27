@@ -1,0 +1,14 @@
+<?php
+
+namespace UmmAlQura;
+
+enum ErrorCode: string
+{
+    case INVALID_DAY = 'INVALID_DAY';
+    case INVALID_MONTH = 'INVALID_MONTH';
+    case INVALID_YEAR = 'INVALID_YEAR';
+    case OUT_OF_RANGE = 'OUT_OF_RANGE';
+    case UNSUPPORTED_CALENDAR = 'UNSUPPORTED_CALENDAR';
+    case INVALID_TIMEZONE = 'INVALID_TIMEZONE';
+    case MALFORMED_INPUT = 'MALFORMED_INPUT';
+}
