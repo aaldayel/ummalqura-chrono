@@ -57,7 +57,7 @@ final class Core {
         MonthInfo entry = monthIndex.get(key);
         if (entry == null) {
             throw new CalendarError(ErrorCode.OUT_OF_RANGE,
-                "Hijri date " + year + "-" + String.format("%02d", month) + " is outside the supported range (1300-1700 AH)");
+                "Hijri date " + year + "-" + String.format("%02d", month) + " is outside the supported range");
         }
         return entry.getFirstDayJdn() + day - 1;
     }
@@ -69,6 +69,13 @@ final class Core {
         if (jdn < sortedMonths[0].getFirstDayJdn()) {
             throw new CalendarError(ErrorCode.OUT_OF_RANGE,
                 "JDN " + jdn + " is before the supported range (first JDN: " + sortedMonths[0].getFirstDayJdn() + ")");
+        }
+
+        MonthInfo lastMonth = sortedMonths[sortedMonths.length - 1];
+        int lastValidJdn = lastMonth.getFirstDayJdn() + lastMonth.getMonthLength() - 1;
+        if (jdn > lastValidJdn) {
+            throw new CalendarError(ErrorCode.OUT_OF_RANGE,
+                "JDN " + jdn + " is after the supported range (last JDN: " + lastValidJdn + ")");
         }
 
         int left = 0;
@@ -116,9 +123,11 @@ final class Core {
             return new CalendarError(ErrorCode.INVALID_MONTH,
                 "Month must be between 1 and 12, got " + month, "month", month);
         }
-        if (year < 1300 || year > 1700) {
+        int minYear = monthIndex.values().stream().mapToInt(MonthInfo::getHijriYear).min().orElse(1318);
+        int maxYear = monthIndex.values().stream().mapToInt(MonthInfo::getHijriYear).max().orElse(1500);
+        if (year < minYear || year > maxYear) {
             return new CalendarError(ErrorCode.INVALID_YEAR,
-                "Year must be between 1300 and 1700, got " + year, "year", year);
+                "Year must be between " + minYear + " and " + maxYear + ", got " + year, "year", year);
         }
         String key = year + "-" + month;
         MonthInfo entry = monthIndex.get(key);

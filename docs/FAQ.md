@@ -16,22 +16,22 @@ Yes. All conversion logic runs entirely offline. No network calls are ever made.
 
 ### What date range is supported?
 
-- Hijri: 1300 AH – 1700 AH
-- Gregorian: approximately 1882 CE – 2277 CE
+- Hijri: 1318 AH – 1500 AH
+- Gregorian: approximately 1900 CE – 2077 CE
 
 ### How accurate is the conversion?
 
-The library uses the Fliegel & Van Flandern (1968) algorithm for Gregorian↔JDN conversion (sub-microsecond accuracy) and the official KACST month-length table for JDN↔Umm al-Qura conversion. Results are verified against Microsoft's .NET `UmmAlQuraCalendar` implementation.
+The library uses the Fliegel & Van Flandern (1968) algorithm for Gregorian↔JDN conversion and the official KACST month-length table (via Microsoft `UmAlQuraCalendar`) for JDN↔Umm al-Qura conversion. CI runs `scripts/validate_microsoft_parity.py` against the reference data.
 
 ## Usage
 
 ### Why do I get different results than other libraries?
 
-Other libraries may use tabular (arithmetic) Islamic calendars which can differ from the official Umm al-Qura calendar by 1-2 days. This library uses the authoritative month-length table.
+Other libraries may use tabular (arithmetic) Islamic calendars which can differ from the official Umm al-Qura calendar by 1–2 days. This library uses the authoritative per-year month-length flags from KACST, not a fixed 30-year tabular formula.
 
-### Can I convert dates outside 1300-1700 AH?
+### Can I convert dates outside 1318–1500 AH?
 
-No. The data table only covers this range. Attempting to convert outside this range will produce an `OUT_OF_RANGE` error. To extend the range, new data must be published by KACST.
+No. The published official tables cover this range. Attempting to convert outside this range will produce an `OUT_OF_RANGE` error.
 
 ### How do I add my own locale?
 
@@ -75,7 +75,7 @@ Independent native ports provide the best developer experience: native types, na
 
 ### How is the data file generated?
 
-`scripts/generate_data.py` generates the month-length table programmatically using the KACST algorithm. The SHA-256 checksum is committed alongside the data for integrity verification.
+`scripts/generate_data.py` imports month-length flags from `scripts/UmAlQuraCalendar.cs.reference` (Microsoft .NET, sourced from KACST `UmAlQura.xls`). The SHA-256 checksum is committed alongside the data for integrity verification. Run `scripts/validate_microsoft_parity.py` to verify correctness.
 
 ### When is the data updated?
 

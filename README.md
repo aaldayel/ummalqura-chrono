@@ -20,8 +20,8 @@ The Umm al-Qura calendar is the official civil calendar of the Kingdom of Saudi 
 
 | Calendar | Range |
 |----------|-------|
-| Hijri | 1300 AH – 1700 AH |
-| Gregorian | ~1882 CE – ~2277 CE |
+| Hijri | 1318 AH – 1500 AH |
+| Gregorian | 1900 CE – 2077 CE |
 
 ## Quick Start
 
@@ -203,7 +203,7 @@ To add a new locale, see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-locale).
 
 ## Data Source
 
-The month-length table is based on official KACST publications and is verified against Microsoft's `UmmAlQuraCalendar` implementation. The data file includes a version identifier and SHA-256 checksum for integrity verification.
+The month-length table is imported from the official Saudi UmAlQura tables via Microsoft's `UmAlQuraCalendar` reference implementation (sourced from KACST `UmAlQura.xls`). The data file includes a version identifier and SHA-256 checksum for integrity verification. Regenerate with `python scripts/generate_data.py` and validate with `python scripts/validate_microsoft_parity.py`.
 
 ## Testing
 

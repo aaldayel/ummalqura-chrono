@@ -37,8 +37,8 @@ func TestDataChecksum(t *testing.T) {
 func TestHijriRange(t *testing.T) {
 	cal := createTestCalendar(t)
 	start, end := cal.HijriRange()
-	if start != 1300 || end != 1700 {
-		t.Errorf("Expected range 1300-1700, got %d-%d", start, end)
+	if start != 1318 || end != 1500 {
+		t.Errorf("Expected range 1318-1500, got %d-%d", start, end)
 	}
 }
 
@@ -48,11 +48,11 @@ func TestGregorianRange(t *testing.T) {
 	if min >= max {
 		t.Errorf("Expected min < max, got min=%d max=%d", min, max)
 	}
-	if min <= 1800 {
-		t.Errorf("Expected min > 1800, got %d", min)
+	if min < 1900 {
+		t.Errorf("Expected min >= 1900, got %d", min)
 	}
-	if max >= 2300 {
-		t.Errorf("Expected max < 2300, got %d", max)
+	if max >= 2080 {
+		t.Errorf("Expected max < 2080, got %d", max)
 	}
 }
 
@@ -226,12 +226,16 @@ func TestGregorianMonthLengths(t *testing.T) {
 func TestHijriMonthLengths(t *testing.T) {
 	cal := createTestCalendar(t)
 	n1, _ := cal.GetHijriMonthLength(1445, 1)
-	if n1 != 30 {
-		t.Errorf("Muharram 1445: expected 30, got %d", n1)
+	if n1 != 29 {
+		t.Errorf("Muharram 1445: expected 29, got %d", n1)
 	}
 	n2, _ := cal.GetHijriMonthLength(1445, 2)
-	if n2 != 29 {
-		t.Errorf("Safar 1445: expected 29, got %d", n2)
+	if n2 != 30 {
+		t.Errorf("Safar 1445: expected 30, got %d", n2)
+	}
+	n12, _ := cal.GetHijriMonthLength(1445, 12)
+	if n12 != 30 {
+		t.Errorf("Dhul Hijjah 1445: expected 30, got %d", n12)
 	}
 }
 
@@ -365,66 +369,60 @@ func TestJdnToGregorian(t *testing.T) {
 	}
 }
 
-func TestIsUmAlQuraLeapYear(t *testing.T) {
-	leapTests := []struct {
-		year   int
-		isLeap bool
-	}{
-		{1300, true},
-		{1303, true},
-		{1421, true},
-		{1422, false},
-		{1423, false},
-		{1424, true},
-		{1429, true},
-		{1430, false},
+func TestUmAlQuraMonthTwelveLength(t *testing.T) {
+	cal := createTestCalendar(t)
+	// 1445 AH has a 30-day Dhul Hijjah per official tables
+	n12, err := cal.GetHijriMonthLength(1445, 12)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
 	}
-	for _, tt := range leapTests {
-		if got := IsUmAlQuraLeapYear(tt.year); got != tt.isLeap {
-			t.Errorf("IsUmAlQuraLeapYear(%d) = %v, want %v", tt.year, got, tt.isLeap)
-		}
+	if n12 != 30 {
+		t.Errorf("Dhul Hijjah 1445: expected 30, got %d", n12)
 	}
 }
 
 func TestGregorianToHijriBoundaryFirstMonth(t *testing.T) {
 	cal := createTestCalendar(t)
-	result, err := cal.GregorianToHijri(1882, 11, 24, "")
+	result, err := cal.GregorianToHijri(1900, 4, 30, "")
 	if err != nil {
 		t.Fatalf("Unexpected error near start of range: %v", err)
 	}
 	h := result.Output.(HijriDate)
-	if h.Year != 1300 || h.Month != 1 || h.Day != 1 {
-		t.Errorf("Expected 1300-01-01, got %d-%02d-%02d", h.Year, h.Month, h.Day)
+	if h.Year != 1318 || h.Month != 1 || h.Day != 1 {
+		t.Errorf("Expected 1318-01-01, got %d-%02d-%02d", h.Year, h.Month, h.Day)
 	}
 }
 
 func TestHijriToGregorianBoundaryLastMonth(t *testing.T) {
 	cal := createTestCalendar(t)
-	result, err := cal.HijriToGregorian(1700, 12, 29, "")
+	result, err := cal.HijriToGregorian(1500, 12, 30, "")
 	if err != nil {
 		t.Fatalf("Unexpected error near end of range: %v", err)
 	}
 	g := result.Output.(GregorianDate)
-	if g.Year < 2270 || g.Year > 2280 {
-		t.Errorf("Expected Gregorian year around 2277, got %d", g.Year)
+	if g.Year < 2076 || g.Year > 2078 {
+		t.Errorf("Expected Gregorian year around 2077, got %d", g.Year)
 	}
 }
 
 func TestJdnToHijriBoundary(t *testing.T) {
 	cal := createTestCalendar(t)
-	// Get the JDN of last day in the range
-	jdn := GregorianToJdn(2278, 1, 1)
-	_, _ = JdnToHijri(jdn, cal.sortedMonths)
+	lastMonth := cal.sortedMonths[len(cal.sortedMonths)-1]
+	lastValidJdn := lastMonth.FirstDayJdn + lastMonth.MonthLength - 1
+	_, err := JdnToHijri(lastValidJdn+1, cal.sortedMonths)
+	if err == nil {
+		t.Error("Expected error for JDN after supported range")
+	}
 }
 
 func TestValidateHijriYearRange(t *testing.T) {
 	cal := createTestCalendar(t)
-	result := cal.ValidateHijriDate(1299, 1, 1)
+	result := cal.ValidateHijriDate(1317, 1, 1)
 	if result.Valid {
-		t.Error("Expected 1299 to be invalid (before range)")
+		t.Error("Expected 1317 to be invalid (before range)")
 	}
-	result = cal.ValidateHijriDate(1701, 1, 1)
+	result = cal.ValidateHijriDate(1501, 1, 1)
 	if result.Valid {
-		t.Error("Expected 1701 to be invalid (after range)")
+		t.Error("Expected 1501 to be invalid (after range)")
 	}
 }

@@ -68,30 +68,26 @@ FUNCTION jdn_to_gregorian(jdn):
 
 ### 3.1 Calendar Structure
 
-The Umm al-Qura calendar is a lunar calendar with:
-- 12 months per year
-- Odd months (1, 3, 5, 7, 9, 11) have 30 days
-- Even months (2, 4, 6, 8, 10) have 29 days
-- Month 12 (Dhul Hijjah) has 30 days in leap years, 29 otherwise
+The Umm al-Qura calendar is a lunar calendar with 12 months per year. Each month
+is either 29 or 30 days. Unlike tabular Islamic calendars, month lengths follow
+the official KACST published tables and do **not** follow a simple odd/even
+pattern.
 
-### 3.2 Leap Year Cycle
+### 3.2 Month-Length Data Source
 
-The Umm al-Qura calendar uses a 30-year cycle. Leap years occur at positions:
-```
-{2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29} (mod 30)
-```
-
-**Rule**: A year `y` is a leap year if `(y mod 30)` is in the set above.
+Official month-length flags are imported from KACST `UmAlQura.xls` via Microsoft's
+`UmAlQuraCalendar` (.NET). Each Hijri year stores a 12-bit flag word: bit *i*
+(set = 1) means month *i*+1 has 30 days; cleared bits mean 29 days.
 
 ### 3.3 Month-Length Table
 
 The authoritative month-length table is stored in `data/ummalqura-months.json`. Each entry contains:
-- `hijri_year`: The Hijri year (1300-1700)
+- `hijri_year`: The Hijri year (1318-1500)
 - `hijri_month`: The month number (1-12)
 - `month_length`: Number of days (29 or 30)
 - `first_day_jdn`: JDN of the first day of the month
 
-**Reference Point**: 1 Muharram 1300 AH = JDN 2402132 (September 17, 1864 CE)
+**Reference Point**: 1 Muharram 1318 AH = JDN 2415021 (April 30, 1900 CE)
 
 > **Note**: The worked examples in Section 9 use illustrative values and do not
 > correspond to entries in the actual `data/ummalqura-months.json` file. They are
@@ -200,7 +196,7 @@ FUNCTION is_valid_hijri(year, month, day, month_table):
     IF month < 1 OR month > 12:
         RETURN FALSE
     
-    IF year < 1300 OR year > 1700:
+    IF year < MIN_YEAR OR year > MAX_YEAR:
         RETURN FALSE
     
     // Look up month length in table

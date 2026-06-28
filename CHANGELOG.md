@@ -37,7 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Replace tabular Hijri data with official KACST month-length flags (Microsoft `UmAlQuraCalendar` reference, 1318–1500 AH)
+- Add upper-bound validation to `jdnToHijri` across all language implementations
+- Fix Go package compilation errors
+- Bundle data file in Python and JavaScript packages
+- Fix JavaScript golden-value test CSV path
+- Remove incorrect hardcoded golden-value reference rows
+
 ### Added
+- `scripts/validate_microsoft_parity.py` for authoritative correctness checks in CI
+- `scripts/UmAlQuraCalendar.cs.reference` as the data source snapshot
 - .NET (C#) wrapper with full API
 - Java wrapper with full API
 - Kotlin wrapper with full API

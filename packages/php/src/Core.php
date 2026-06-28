@@ -65,7 +65,7 @@ final class Core
         if (!isset($monthIndex[$key])) {
             throw new CalendarError(
                 ErrorCode::OUT_OF_RANGE,
-                "Hijri date $key is outside the supported range (1300-1700 AH)"
+                "Hijri date $key is outside the supported range"
             );
         }
         return $monthIndex[$key]->getFirstDayJdn() + $day - 1;
@@ -78,6 +78,12 @@ final class Core
         }
         if ($jdn < $sortedMonths[0]->getFirstDayJdn()) {
             throw new CalendarError(ErrorCode::OUT_OF_RANGE, "JDN $jdn is before the supported range (first JDN: {$sortedMonths[0]->getFirstDayJdn()})");
+        }
+
+        $lastMonth = $sortedMonths[count($sortedMonths) - 1];
+        $lastValidJdn = $lastMonth->getFirstDayJdn() + $lastMonth->getMonthLength() - 1;
+        if ($jdn > $lastValidJdn) {
+            throw new CalendarError(ErrorCode::OUT_OF_RANGE, "JDN $jdn is after the supported range (last JDN: $lastValidJdn)");
         }
 
         $left = 0;
@@ -124,8 +130,8 @@ final class Core
         if ($month < 1 || $month > 12) {
             return new CalendarError(ErrorCode::INVALID_MONTH, "Month must be between 1 and 12, got $month", 'month', $month);
         }
-        $minYear = !empty($monthIndex) ? min(array_map(fn($m) => $m->getHijriYear(), $monthIndex)) : 1300;
-        $maxYear = !empty($monthIndex) ? max(array_map(fn($m) => $m->getHijriYear(), $monthIndex)) : 1700;
+        $minYear = !empty($monthIndex) ? min(array_map(fn($m) => $m->getHijriYear(), $monthIndex)) : 1318;
+        $maxYear = !empty($monthIndex) ? max(array_map(fn($m) => $m->getHijriYear(), $monthIndex)) : 1500;
         if ($year < $minYear || $year > $maxYear) {
             return new CalendarError(ErrorCode::INVALID_YEAR, "Year must be between $minYear and $maxYear, got $year", 'year', $year);
         }

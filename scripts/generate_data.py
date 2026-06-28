@@ -1,118 +1,199 @@
 #!/usr/bin/env python3
 """
-Generate the Umm al-Qura month-length data table.
+Generate the Umm al-Qura month-length data table from official Saudi tables.
 
-This script generates the authoritative month-length table for the Umm al-Qura
-calendar system (1300 AH - 1700 AH). The data is based on the KACST algorithm
-and verified against Microsoft's UmmAlQuraCalendar implementation.
+Data is extracted from Microsoft's UmAlQuraCalendar implementation, which is
+sourced from KACST UmAlQura.xls (see scripts/UmAlQuraCalendar.cs.reference).
+
+Supported Hijri range: 1318 AH – 1500 AH (matches the official published tables).
 
 Usage:
-    python generate_data.py [--output PATH]
+    python scripts/generate_data.py
 """
 
-import json
 import hashlib
-import sys
-from pathlib import Path
+import json
+import re
 from datetime import datetime, timezone
+from pathlib import Path
 
-# The Umm al-Qura calendar is based on a 30-year cycle.
-# Leap years in the cycle (positions where year mod 30 is in this set):
-UMM_AL_QURA_LEAP_YEARS = {2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29}
+SCRIPT_DIR = Path(__file__).parent
+ROOT = SCRIPT_DIR.parent
+REFERENCE_FILE = SCRIPT_DIR / "UmAlQuraCalendar.cs.reference"
+OUTPUT_FILE = ROOT / "data" / "ummalqura-months.json"
+CHECKSUM_FILE = ROOT / "data" / "ummalqura-months.sha256"
 
-# Reference point: 1 Muharram 1300 AH corresponds to JDN 2402132
-# This is November 12, 1882 CE (Julian) / November 24, 1882 CE (Gregorian)
-HIJRI_1300_01_01_JDN = 2402132
+# Package-local copies for standalone installs
+PACKAGE_DATA_PATHS = [
+    ROOT / "packages" / "python" / "ummalqura" / "data" / "ummalqura-months.json",
+    ROOT / "packages" / "js" / "data" / "ummalqura-months.json",
+]
 
-def is_ummalqura_leap_year(year: int) -> bool:
-    """Check if a Hijri year is a leap year in the Umm al-Qura calendar."""
-    return (year % 30) in UMM_AL_QURA_LEAP_YEARS
+YEAR_PATTERN = re.compile(
+    r"(\d{4})\*/0x([0-9A-Fa-f]+),\s*(\d+),\s*(\d+),\s*(\d+)"
+)
 
-def get_month_length(year: int, month: int) -> int:
-    """
-    Get the length of a month in the Umm al-Qura calendar.
-    
-    Odd months (1, 3, 5, 7, 9, 11) have 30 days.
-    Even months (2, 4, 6, 8, 10) have 29 days.
-    Month 12 (Dhul Hijjah) has 30 days in leap years, 29 otherwise.
-    """
-    if month % 2 == 1:  # Odd months
-        return 30
-    elif month == 12:  # Dhul Hijjah
-        return 30 if is_ummalqura_leap_year(year) else 29
-    else:  # Even months (2, 4, 6, 8, 10)
-        return 29
 
-def generate_month_table():
-    """Generate the complete month-length table for years 1300-1700 AH."""
+def gregorian_to_jdn(year: int, month: int, day: int) -> int:
+    """Fliegel & Van Flandern (1968), proleptic Gregorian."""
+    a = (14 - month) // 12
+    y = year + 4800 - a
+    m = month + 12 * a - 3
+    return (
+        day
+        + (153 * m + 2) // 5
+        + 365 * y
+        + y // 4
+        - y // 100
+        + y // 400
+        - 32045
+    )
+
+
+def month_lengths_from_flags(flags: int) -> list[int]:
+    """Each bit: 1 = 30 days, 0 = 29 days (months 1–12, LSB = month 1)."""
+    return [30 if (flags & (1 << i)) else 29 for i in range(12)]
+
+
+def parse_reference_years() -> list[dict]:
+    """Parse year entries from the downloaded UmAlQuraCalendar.cs reference."""
+    if not REFERENCE_FILE.exists():
+        raise FileNotFoundError(
+            f"Missing {REFERENCE_FILE}. Download from dotnet/runtime "
+            "System/Globalization/UmAlQuraCalendar.cs"
+        )
+
+    years = []
+    for line in REFERENCE_FILE.read_text(encoding="utf-8").splitlines():
+        match = YEAR_PATTERN.search(line)
+        if not match:
+            continue
+        hijri_year = int(match.group(1))
+        flags = int(match.group(2), 16)
+        g_year = int(match.group(3))
+        g_month = int(match.group(4))
+        g_day = int(match.group(5))
+        years.append(
+            {
+                "hijri_year": hijri_year,
+                "flags": flags,
+                "muharram_gregorian": (g_year, g_month, g_day),
+                "month_lengths": month_lengths_from_flags(flags),
+            }
+        )
+
+    years.sort(key=lambda y: y["hijri_year"])
+    return years
+
+
+def generate_month_table(years: list[dict]) -> list[dict]:
+    """Build per-month rows with first_day_jdn and month_length."""
     months = []
-    current_jdn = HIJRI_1300_01_01_JDN
-    
-    for year in range(1300, 1701):  # 1300 to 1700 inclusive
-        for month in range(1, 13):  # 1 to 12 inclusive
-            length = get_month_length(year, month)
-            months.append({
-                "hijri_year": year,
-                "hijri_month": month,
-                "month_length": length,
-                "first_day_jdn": current_jdn
-            })
+    for year_info in years:
+        hijri_year = year_info["hijri_year"]
+        lengths = year_info["month_lengths"]
+        gy, gm, gd = year_info["muharram_gregorian"]
+        current_jdn = gregorian_to_jdn(gy, gm, gd)
+
+        for month in range(1, 13):
+            length = lengths[month - 1]
+            months.append(
+                {
+                    "hijri_year": hijri_year,
+                    "hijri_month": month,
+                    "month_length": length,
+                    "first_day_jdn": current_jdn,
+                }
+            )
             current_jdn += length
-    
+
     return months
 
-def compute_checksum(data: list) -> str:
-    """Compute SHA-256 checksum of the data."""
-    data_str = json.dumps(data, separators=(',', ':'), sort_keys=True)
-    return hashlib.sha256(data_str.encode('utf-8')).hexdigest()
 
-def main():
-    output_dir = Path(__file__).parent.parent / "data"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Generate the data
-    print("Generating Umm al-Qura month-length table...")
-    months = generate_month_table()
-    
-    # Create the data structure
-    data = {
-        "version": "2024-01",
-        "description": "Umm al-Qura Hijri Calendar - Month Length Table",
-        "source": "KACST (King Abdulaziz City for Science and Technology)",
-        "hijri_range": {"start": 1300, "end": 1700},
-        "total_months": len(months),
-        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "months": months
-    }
-    
-    # Compute checksum (excluding the checksum field itself)
-    data_for_checksum = {k: v for k, v in data.items() if k != "checksum"}
-    checksum = compute_checksum(data_for_checksum)
-    data["checksum"] = checksum
-    
-    # Write the JSON file
-    output_file = output_dir / "ummalqura-months.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
+def compute_checksum(data: dict) -> str:
+    payload = {k: v for k, v in data.items() if k != "checksum"}
+    data_str = json.dumps(payload, separators=(",", ":"), sort_keys=True)
+    return hashlib.sha256(data_str.encode("utf-8")).hexdigest()
+
+
+def write_data_file(data: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print(f"Written: {output_file}")
-    
-    # Write the checksum file
-    checksum_file = output_dir / "ummalqura-months.sha256"
-    with open(checksum_file, 'w', encoding='utf-8') as f:
-        f.write(f"{checksum}  ummalqura-months.json\n")
-    print(f"Written: {checksum_file}")
-    
-    # Print summary
+
+
+def main() -> None:
+    print("Parsing official UmAlQura calendar reference...")
+    years = parse_reference_years()
+    if not years:
+        raise RuntimeError("No year entries parsed from reference file")
+
+    hijri_start = years[0]["hijri_year"]
+    hijri_end = years[-1]["hijri_year"]
+    months = generate_month_table(years)
+
+    data = {
+        "version": "2026-06",
+        "description": "Umm al-Qura Hijri Calendar - Month Length Table",
+        "source": (
+            "KACST UmAlQura.xls via Microsoft .NET UmAlQuraCalendar "
+            "(scripts/UmAlQuraCalendar.cs.reference)"
+        ),
+        "hijri_range": {"start": hijri_start, "end": hijri_end},
+        "total_months": len(months),
+        "generated_at": datetime.now(timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "months": months,
+    }
+    data["checksum"] = compute_checksum(data)
+
+    write_data_file(data, OUTPUT_FILE)
+    CHECKSUM_FILE.write_text(f"{data['checksum']}  ummalqura-months.json\n", encoding="utf-8")
+
+    for package_path in PACKAGE_DATA_PATHS:
+        write_data_file(data, package_path)
+        print(f"Written: {package_path}")
+
     print(f"\nSummary:")
     print(f"  Version: {data['version']}")
-    print(f"  Hijri range: {data['hijri_range']['start']} - {data['hijri_range']['end']}")
-    print(f"  Total months: {data['total_months']}")
-    print(f"  Checksum: {checksum[:16]}...")
-    
-    # Verify some known dates
-    # 1 Muharram 1300 AH = JDN 2402132
-    assert months[0]["first_day_jdn"] == 2402132, "Reference point mismatch!"
-    print("\nVerification: 1 Muharram 1300 AH = JDN 2402132 ✓")
+    print(f"  Hijri range: {hijri_start} - {hijri_end}")
+    print(f"  Total months: {len(months)}")
+    print(f"  Checksum: {data['checksum'][:16]}...")
+
+    # Spot-check against Microsoft anchor dates
+    checks = [
+        (1318, 1, 1, (1900, 4, 30)),
+        (1445, 1, 1, (2023, 7, 19)),
+        (1445, 9, 5, (2024, 3, 15)),
+        (1500, 12, 30, None),  # last day existence only
+    ]
+    month_index = {
+        (m["hijri_year"], m["hijri_month"]): m for m in months
+    }
+    for hy, hm, hd, expected_g in checks:
+        entry = month_index[(hy, hm)]
+        jdn = entry["first_day_jdn"] + hd - 1
+        if expected_g:
+            from_jdn = _jdn_to_gregorian(jdn)
+            assert from_jdn == expected_g, f"{hy}-{hm:02d}-{hd:02d}: {from_jdn} != {expected_g}"
+            print(f"  ✓ {hy}-{hm:02d}-{hd:02d} = {expected_g[0]}-{expected_g[1]:02d}-{expected_g[2]:02d}")
+
+    print("\nDone.")
+
+
+def _jdn_to_gregorian(jdn: int) -> tuple[int, int, int]:
+    a = jdn + 32044
+    b = (4 * a + 3) // 146097
+    c = a - (146097 * b) // 4
+    d = (4 * c + 3) // 1461
+    e = c - (1461 * d) // 4
+    m = (5 * e + 2) // 153
+    day = e - (153 * m + 2) // 5 + 1
+    month = m + 3 - 12 * (m // 10)
+    year = 100 * b + d - 4800 + m // 10
+    return year, month, day
+
 
 if __name__ == "__main__":
     main()

@@ -273,7 +273,7 @@ func (c *UmmAlQuraCalendar) GetGregorianMonth(year, month int, locale string) *M
 	monthNameAr := gregorianMonthsAr[month-1]
 
 	return &MonthCalendar{
-		Calendar:    CalendarGregorian,
+		Calendar:    string(CalendarGregorian),
 		Year:        year,
 		Month:       month,
 		Days:        days,
@@ -316,7 +316,7 @@ func (c *UmmAlQuraCalendar) GetHijriMonth(year, month int, locale string) (*Mont
 	monthNameAr := hijriMonthsAr[month-1]
 
 	return &MonthCalendar{
-		Calendar:    CalendarHijriUmAlQura,
+		Calendar:    string(CalendarHijriUmAlQura),
 		Year:        year,
 		Month:       month,
 		Days:        days,

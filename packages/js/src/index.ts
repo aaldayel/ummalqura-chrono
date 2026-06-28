@@ -47,8 +47,8 @@ const LIBRARY_VERSION = '1.0.0';
 
 function findDataFile(): string {
   const paths = [
-    path.join(__dirname, '..', '..', '..', 'data', 'ummalqura-months.json'),
     path.join(__dirname, '..', 'data', 'ummalqura-months.json'),
+    path.join(__dirname, '..', '..', '..', 'data', 'ummalqura-months.json'),
     path.join(__dirname, '..', '..', 'data', 'ummalqura-months.json'),
   ];
   for (const p of paths) {

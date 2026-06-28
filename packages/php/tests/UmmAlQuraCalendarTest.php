@@ -34,8 +34,8 @@ class UmmAlQuraCalendarTest extends TestCase
     public function testHijriRange(): void
     {
         $range = $this->calendar->getHijriRange();
-        $this->assertSame(1300, $range['start']);
-        $this->assertSame(1700, $range['end']);
+        $this->assertSame(1318, $range['start']);
+        $this->assertSame(1500, $range['end']);
     }
 
     public function testGregorianRange(): void
@@ -187,10 +187,9 @@ class UmmAlQuraCalendarTest extends TestCase
 
     public function testHijriMonthLengths(): void
     {
-        $this->assertSame(30, $this->calendar->getHijriMonthLength(1445, 1));
-        $this->assertSame(29, $this->calendar->getHijriMonthLength(1445, 2));
-        $this->assertSame(30, $this->calendar->getHijriMonthLength(1445, 3));
-        $this->assertSame(29, $this->calendar->getHijriMonthLength(1445, 4));
+        $this->assertSame(29, $this->calendar->getHijriMonthLength(1445, 1));
+        $this->assertSame(30, $this->calendar->getHijriMonthLength(1445, 2));
+        $this->assertSame(30, $this->calendar->getHijriMonthLength(1445, 12));
     }
 
     public function testLeapYears(): void

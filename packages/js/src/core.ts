@@ -145,7 +145,7 @@ export function hijriToJdn(
   if (!entry) {
     throw createError(
       ErrorCode.OUT_OF_RANGE,
-      `Hijri date ${year}-${String(month).padStart(2, '0')} is outside the supported range (1300-1700 AH)`
+      `Hijri date ${year}-${String(month).padStart(2, '0')} is outside the supported range`
     );
   }
   
@@ -161,10 +161,27 @@ export function jdnToHijri(
   jdn: number, 
   sortedMonths: MonthInfo[]
 ): { year: number; month: number; day: number } {
+  if (sortedMonths.length === 0) {
+    throw createError(
+      ErrorCode.OUT_OF_RANGE,
+      'Month table is empty'
+    );
+  }
+
+  const lastMonth = sortedMonths[sortedMonths.length - 1];
+  const lastValidJdn = lastMonth.first_day_jdn + lastMonth.month_length - 1;
+
   if (jdn < sortedMonths[0].first_day_jdn) {
     throw createError(
       ErrorCode.OUT_OF_RANGE,
       `JDN ${jdn} is before the supported range (first JDN: ${sortedMonths[0].first_day_jdn})`
+    );
+  }
+
+  if (jdn > lastValidJdn) {
+    throw createError(
+      ErrorCode.OUT_OF_RANGE,
+      `JDN ${jdn} is after the supported range (last JDN: ${lastValidJdn})`
     );
   }
 
@@ -281,11 +298,15 @@ export function validateHijri(
     );
   }
   
+  const hijriYears = [...new Set([...monthIndex.values()].map((m) => m.hijri_year))].sort((a, b) => a - b);
+  const minYear = hijriYears[0] ?? 1318;
+  const maxYear = hijriYears[hijriYears.length - 1] ?? 1500;
+
   // Check year range
-  if (year < 1300 || year > 1700) {
+  if (year < minYear || year > maxYear) {
     return createError(
       ErrorCode.INVALID_YEAR,
-      `Year must be between 1300 and 1700, got ${year}`,
+      `Year must be between ${minYear} and ${maxYear}, got ${year}`,
       'year',
       year
     );

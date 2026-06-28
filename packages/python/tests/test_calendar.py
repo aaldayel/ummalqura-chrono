@@ -65,13 +65,13 @@ class TestVersionAndData:
     
     def test_hijri_range(self, calendar):
         start, end = calendar.hijri_range
-        assert start == 1300
-        assert end == 1700
+        assert start == 1318
+        assert end == 1500
     
     def test_gregorian_range(self, calendar):
         min_year, max_year = calendar.gregorian_year_range
         assert min_year < max_year
-        assert min_year > 1800
+        assert min_year >= 1900
         assert max_year < 2300
 
 
@@ -107,7 +107,7 @@ class TestGregorianToHijri:
     
     def test_year_out_of_range(self, calendar):
         with pytest.raises(CalendarException) as exc_info:
-            calendar.gregorian_to_hijri(1800, 1, 1)
+            calendar.gregorian_to_hijri(1899, 1, 1)
         assert exc_info.value.error.error_code == ErrorCode.INVALID_YEAR
 
 
@@ -133,7 +133,7 @@ class TestHijriToGregorian:
     
     def test_year_out_of_range(self, calendar):
         with pytest.raises(CalendarException) as exc_info:
-            calendar.hijri_to_gregorian(1200, 1, 1)
+            calendar.hijri_to_gregorian(1317, 1, 1)
         assert exc_info.value.error.error_code == ErrorCode.INVALID_YEAR
 
 
@@ -217,13 +217,9 @@ class TestMonthLengths:
     
     def test_hijri_month_lengths(self, calendar):
         """Test Hijri month lengths"""
-        # Odd months have 30 days
-        assert calendar.get_hijri_month_length(1445, 1) == 30  # Muharram
-        assert calendar.get_hijri_month_length(1445, 3) == 30  # Rabi al-Awwal
-        
-        # Even months have 29 days
-        assert calendar.get_hijri_month_length(1445, 2) == 29  # Safar
-        assert calendar.get_hijri_month_length(1445, 4) == 29  # Rabi al-Thani
+        assert calendar.get_hijri_month_length(1445, 1) == 29  # Muharram
+        assert calendar.get_hijri_month_length(1445, 2) == 30  # Safar
+        assert calendar.get_hijri_month_length(1445, 12) == 30  # Dhul Hijjah
     
     def test_leap_years(self, calendar):
         """Test leap year detection"""
@@ -283,7 +279,7 @@ class TestMonthCalendar:
         assert result.calendar == "hijri-ummalqura"
         assert result.year == 1445
         assert result.month == 9
-        assert len(result.days) == 29  # Ramadan 1445 has 29 days
+        assert len(result.days) == 30  # Ramadan 1445 has 30 days
         assert result.month_name_en == "Ramadan"
 
 
@@ -384,7 +380,7 @@ class TestErrorHandling:
     
     def test_structured_error_year_out_of_range(self, calendar):
         with pytest.raises(CalendarException) as exc_info:
-            calendar.gregorian_to_hijri(1800, 1, 1)
+            calendar.gregorian_to_hijri(1899, 1, 1)
         
         error = exc_info.value.error
         assert error.error_code == ErrorCode.INVALID_YEAR
