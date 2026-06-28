@@ -1,6 +1,6 @@
 # UmmAlQura-Chrono: Umm al-Qura Calendar Conversion Library
 
-[![CI](https://github.com/ummalqura/ummalqura-chrono/actions/workflows/ci.yml/badge.svg)](https://github.com/ummalqura/ummalqura-chrono/actions/workflows/ci.yml)
+[![CI](https://github.com/aaldayel/ummalqura-chrono/actions/workflows/ci.yml/badge.svg)](https://github.com/aaldayel/ummalqura-chrono/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/ummalqura-chrono.svg)](https://www.npmjs.com/package/ummalqura-chrono)
 [![PyPI version](https://badge.fury.io/py/ummalqura-chrono.svg)](https://pypi.org/project/ummalqura-chrono/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
