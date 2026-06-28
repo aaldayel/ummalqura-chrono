@@ -94,7 +94,7 @@ internal static class Core
         {
             throw new CalendarError(
                 ErrorCode.OutOfRange,
-                $"Hijri date {year}-{month:D2} is outside the supported range (1300-1700 AH)"
+                $"Hijri date {year}-{month:D2} is outside the supported range"
             );
         }
         return entry.FirstDayJdn + day - 1;
@@ -112,6 +112,13 @@ internal static class Core
         if (jdn < sortedMonths[0].FirstDayJdn)
         {
             throw new CalendarError(ErrorCode.OutOfRange, $"JDN {jdn} is before the supported range (first JDN: {sortedMonths[0].FirstDayJdn})");
+        }
+
+        var lastMonth = sortedMonths[^1];
+        var lastValidJdn = lastMonth.FirstDayJdn + lastMonth.MonthLength - 1;
+        if (jdn > lastValidJdn)
+        {
+            throw new CalendarError(ErrorCode.OutOfRange, $"JDN {jdn} is after the supported range (last JDN: {lastValidJdn})");
         }
 
         var left = 0;
@@ -163,8 +170,10 @@ internal static class Core
         if (month < 1 || month > 12)
             return new CalendarError(ErrorCode.InvalidMonth, $"Month must be between 1 and 12, got {month}", "month", month);
 
-        if (year < 1300 || year > 1700)
-            return new CalendarError(ErrorCode.InvalidYear, $"Year must be between 1300 and 1700, got {year}", "year", year);
+        var minYear = monthIndex.Values.Min(m => m.HijriYear);
+        var maxYear = monthIndex.Values.Max(m => m.HijriYear);
+        if (year < minYear || year > maxYear)
+            return new CalendarError(ErrorCode.InvalidYear, $"Year must be between {minYear} and {maxYear}, got {year}", "year", year);
 
         var key = $"{year}-{month}";
         if (!monthIndex.TryGetValue(key, out var entry))

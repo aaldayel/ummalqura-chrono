@@ -33,7 +33,7 @@ describe('UmmAlQuraCalendar', () => {
     calendar = new UmmAlQuraCalendar();
     
     // Load golden values
-    const csvPath = path.join(__dirname, '..', '..', 'tests', 'golden', 'golden-values.csv');
+    const csvPath = path.join(__dirname, '..', '..', '..', 'tests', 'golden', 'golden-values.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     goldenValues = csv.parse(csvContent, {
       columns: true,
@@ -63,8 +63,8 @@ describe('UmmAlQuraCalendar', () => {
     
     it('should return Hijri range', () => {
       const range = calendar.getHijriRange();
-      expect(range.start).toBe(1300);
-      expect(range.end).toBe(1700);
+      expect(range.start).toBe(1318);
+      expect(range.end).toBe(1500);
     });
     
     it('should return Gregorian range', () => {
@@ -104,7 +104,7 @@ describe('UmmAlQuraCalendar', () => {
     });
     
     it('should throw error for year outside range', () => {
-      expect(() => calendar.gregorianToHijri(1800, 1, 1)).toThrow();
+      expect(() => calendar.gregorianToHijri(1899, 1, 1)).toThrow();
     });
   });
   
@@ -125,7 +125,7 @@ describe('UmmAlQuraCalendar', () => {
     });
     
     it('should throw error for year outside range', () => {
-      expect(() => calendar.hijriToGregorian(1200, 1, 1)).toThrow();
+      expect(() => calendar.hijriToGregorian(1317, 1, 1)).toThrow();
     });
   });
   
@@ -207,13 +207,10 @@ describe('UmmAlQuraCalendar', () => {
     });
     
     it('should return correct Hijri month lengths', () => {
-      // Test that odd months have 30 days
-      expect(calendar.getHijriMonthLength(1445, 1)).toBe(30); // Muharram
-      expect(calendar.getHijriMonthLength(1445, 3)).toBe(30); // Rabi al-Awwal
-      
-      // Test that even months have 29 days
-      expect(calendar.getHijriMonthLength(1445, 2)).toBe(29); // Safar
-      expect(calendar.getHijriMonthLength(1445, 4)).toBe(29); // Rabi al-Thani
+      // Official Umm al-Qura table for 1445 AH (not tabular odd/even)
+      expect(calendar.getHijriMonthLength(1445, 1)).toBe(29); // Muharram
+      expect(calendar.getHijriMonthLength(1445, 2)).toBe(30); // Safar
+      expect(calendar.getHijriMonthLength(1445, 12)).toBe(30); // Dhul Hijjah
     });
     
     it('should check leap years correctly', () => {
@@ -273,7 +270,7 @@ describe('UmmAlQuraCalendar', () => {
       expect(ramadan.calendar).toBe('hijri-ummalqura');
       expect(ramadan.year).toBe(1445);
       expect(ramadan.month).toBe(9);
-      expect(ramadan.days.length).toBe(29); // Ramadan 1445 has 29 days
+      expect(ramadan.days.length).toBe(30); // Ramadan 1445 has 30 days
       expect(ramadan.month_name_en).toBe('Ramadan');
     });
   });
@@ -378,7 +375,7 @@ describe('UmmAlQuraCalendar', () => {
     
     it('should throw structured error for year outside range', () => {
       try {
-        calendar.gregorianToHijri(1800, 1, 1);
+        calendar.gregorianToHijri(1899, 1, 1);
         expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.error_code).toBe('INVALID_YEAR');

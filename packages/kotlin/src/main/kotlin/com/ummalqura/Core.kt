@@ -48,7 +48,7 @@ internal object Core {
         val key = "$year-$month"
         val entry = monthIndex[key] ?: throw CalendarError(
             ErrorCode.OUT_OF_RANGE,
-            "Hijri date $key is outside the supported range (1300-1700 AH)"
+            "Hijri date $key is outside the supported range"
         )
         return entry.firstDayJdn + day - 1
     }
@@ -59,6 +59,12 @@ internal object Core {
         }
         if (jdn < sortedMonths[0].firstDayJdn) {
             throw CalendarError(ErrorCode.OUT_OF_RANGE, "JDN $jdn is before the supported range (first JDN: ${sortedMonths[0].firstDayJdn})")
+        }
+
+        val lastMonth = sortedMonths[sortedMonths.size - 1]
+        val lastValidJdn = lastMonth.firstDayJdn + lastMonth.monthLength - 1
+        if (jdn > lastValidJdn) {
+            throw CalendarError(ErrorCode.OUT_OF_RANGE, "JDN $jdn is after the supported range (last JDN: $lastValidJdn)")
         }
 
         var left = 0
@@ -102,8 +108,10 @@ internal object Core {
         if (month < 1 || month > 12) {
             return CalendarError(ErrorCode.INVALID_MONTH, "Month must be between 1 and 12, got $month", "month", month)
         }
-        if (year < 1300 || year > 1700) {
-            return CalendarError(ErrorCode.INVALID_YEAR, "Year must be between 1300 and 1700, got $year", "year", year)
+        val minYear = monthIndex.values.minOfOrNull { it.hijriYear } ?: 1318
+        val maxYear = monthIndex.values.maxOfOrNull { it.hijriYear } ?: 1500
+        if (year < minYear || year > maxYear) {
+            return CalendarError(ErrorCode.INVALID_YEAR, "Year must be between $minYear and $maxYear, got $year", "year", year)
         }
         val key = "$year-$month"
         val entry = monthIndex[key] ?: return CalendarError(ErrorCode.OUT_OF_RANGE, "Hijri date $key is outside the supported range")

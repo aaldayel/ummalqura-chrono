@@ -58,6 +58,18 @@ jobs:
         run: |
           python scripts/validate_locales.py
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python package
+        working-directory: packages/python
+        run: pip install -e .
+
+      - name: Validate Microsoft parity
+        run: python scripts/validate_microsoft_parity.py
+
   test-js:
     name: Test JavaScript
     runs-on: ubuntu-latest

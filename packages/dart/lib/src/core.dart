@@ -52,7 +52,7 @@ class Core {
     if (entry == null) {
       throw CalendarError(
         ErrorCode.outOfRange,
-        'Hijri date $key is outside the supported range (1300-1700 AH)',
+        'Hijri date $key is outside the supported range',
       );
     }
     return entry.firstDayJdn + day - 1;
@@ -64,6 +64,12 @@ class Core {
     }
     if (jdn < sortedMonths[0].firstDayJdn) {
       throw CalendarError(ErrorCode.outOfRange, 'JDN $jdn is before the supported range (first JDN: ${sortedMonths[0].firstDayJdn})');
+    }
+
+    final lastMonth = sortedMonths.last;
+    final lastValidJdn = lastMonth.firstDayJdn + lastMonth.monthLength - 1;
+    if (jdn > lastValidJdn) {
+      throw CalendarError(ErrorCode.outOfRange, 'JDN $jdn is after the supported range (last JDN: $lastValidJdn)');
     }
 
     var left = 0;
@@ -107,8 +113,10 @@ class Core {
     if (month < 1 || month > 12) {
       return CalendarError(ErrorCode.invalidMonth, 'Month must be between 1 and 12, got $month', field: 'month', value: month);
     }
-    if (year < 1300 || year > 1700) {
-      return CalendarError(ErrorCode.invalidYear, 'Year must be between 1300 and 1700, got $year', field: 'year', value: year);
+    final minYear = monthIndex.values.map((m) => m.hijriYear).fold<int?>(null, (a, b) => a == null ? b : (a < b ? a : b)) ?? 1318;
+    final maxYear = monthIndex.values.map((m) => m.hijriYear).fold<int?>(null, (a, b) => a == null ? b : (a > b ? a : b)) ?? 1500;
+    if (year < minYear || year > maxYear) {
+      return CalendarError(ErrorCode.invalidYear, 'Year must be between $minYear and $maxYear, got $year', field: 'year', value: year);
     }
     final key = '$year-$month';
     final entry = monthIndex[key];

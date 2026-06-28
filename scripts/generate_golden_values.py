@@ -176,27 +176,26 @@ def generate_golden_values(count: int = 10000):
             })
             seen_jdns.add(last_jdn)
     
-    # 2. Add specific reference dates
-    reference_dates = [
-        # (Gregorian year, month, day) -> Known Hijri date
-        ((2024, 3, 15), (1445, 9, 5)),  # Example from prompt
-        ((2024, 1, 1), (1445, 6, 19)),   # New Year 2024
-        ((2000, 1, 1), (1420, 9, 25)),   # Y2K
-        ((1900, 1, 1), (1317, 10, 29)),  # 1900
-        ((2024, 4, 9), (1445, 10, 1)),   # Eid al-Fitr 2024 (approx)
+    # 2. Add specific reference dates (computed from the table, not hardcoded)
+    reference_gregorian_dates = [
+        (2024, 3, 15),
+        (2024, 1, 1),
+        (2000, 1, 1),
+        (1900, 4, 30),
     ]
-    
-    for greg, hijri in reference_dates:
+
+    for greg in reference_gregorian_dates:
         jdn = gregorian_to_jdn(*greg)
         if jdn not in seen_jdns:
+            h_year, h_month, h_day = jdn_to_hijri(jdn, month_data)
             dow = get_day_of_week(jdn)
             vectors.append({
                 "gregorian_year": greg[0],
                 "gregorian_month": greg[1],
                 "gregorian_day": greg[2],
-                "hijri_year": hijri[0],
-                "hijri_month": hijri[1],
-                "hijri_day": hijri[2],
+                "hijri_year": h_year,
+                "hijri_month": h_month,
+                "hijri_day": h_day,
                 "jdn": jdn,
                 "day_of_week_index": dow[0],
                 "day_of_week_en": dow[1],

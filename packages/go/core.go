@@ -73,7 +73,7 @@ func HijriToJdn(year, month, day int, monthIndex map[string]*MonthInfo) (int, er
 	if !ok {
 		return 0, &CalendarError{
 			ErrorCode: ErrorCodeOutOfRange,
-			Message:   fmt.Sprintf("Hijri date %s is outside the supported range (1300-1700 AH)", key),
+			Message:   fmt.Sprintf("Hijri date %s is outside the supported range", key),
 		}
 	}
 	return entry.FirstDayJdn + day - 1, nil
@@ -92,6 +92,15 @@ func JdnToHijri(jdn int, sortedMonths []*MonthInfo) (HijriDate, error) {
 		return HijriDate{}, &CalendarError{
 			ErrorCode: ErrorCodeOutOfRange,
 			Message:   fmt.Sprintf("JDN %d is before the supported range (first JDN: %d)", jdn, sortedMonths[0].FirstDayJdn),
+		}
+	}
+
+	lastMonth := sortedMonths[len(sortedMonths)-1]
+	lastValidJdn := lastMonth.FirstDayJdn + lastMonth.MonthLength - 1
+	if jdn > lastValidJdn {
+		return HijriDate{}, &CalendarError{
+			ErrorCode: ErrorCodeOutOfRange,
+			Message:   fmt.Sprintf("JDN %d is after the supported range (last JDN: %d)", jdn, lastValidJdn),
 		}
 	}
 
@@ -224,7 +233,7 @@ func GetGregorianYearRange(months []*MonthInfo) (int, int) {
 	if len(months) == 0 {
 		return 0, 0
 	}
-	first, _ := JdnToGregorian(months[0].FirstDayJdn)
+	first := JdnToGregorian(months[0].FirstDayJdn)
 	last := months[len(months)-1]
 	lastJdn := last.FirstDayJdn + last.MonthLength - 1
 	lastGreg := JdnToGregorian(lastJdn)

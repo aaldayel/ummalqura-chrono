@@ -51,7 +51,7 @@ internal struct Core {
     static func hijriToJdn(_ year: Int, _ month: Int, _ day: Int, _ monthIndex: [String: MonthInfo]) throws -> Int {
         let key = "\(year)-\(month)"
         guard let entry = monthIndex[key] else {
-            throw CalendarError(errorCode: .outOfRange, message: "Hijri date \(key) is outside the supported range (1300-1700 AH)")
+            throw CalendarError(errorCode: .outOfRange, message: "Hijri date \(key) is outside the supported range")
         }
         return entry.firstDayJdn + day - 1
     }
@@ -62,6 +62,12 @@ internal struct Core {
         }
         if jdn < sortedMonths[0].firstDayJdn {
             throw CalendarError(errorCode: .outOfRange, message: "JDN \(jdn) is before the supported range (first JDN: \(sortedMonths[0].firstDayJdn))")
+        }
+
+        let lastMonth = sortedMonths[sortedMonths.count - 1]
+        let lastValidJdn = lastMonth.firstDayJdn + lastMonth.monthLength - 1
+        if jdn > lastValidJdn {
+            throw CalendarError(errorCode: .outOfRange, message: "JDN \(jdn) is after the supported range (last JDN: \(lastValidJdn))")
         }
 
         var left = 0
@@ -105,8 +111,10 @@ internal struct Core {
         if month < 1 || month > 12 {
             return CalendarError(errorCode: .invalidMonth, message: "Month must be between 1 and 12, got \(month)", field: "month", value: month)
         }
-        if year < 1300 || year > 1700 {
-            return CalendarError(errorCode: .invalidYear, message: "Year must be between 1300 and 1700, got \(year)", field: "year", value: year)
+        let minYear = monthIndex.values.map(\.hijriYear).min() ?? 1318
+        let maxYear = monthIndex.values.map(\.hijriYear).max() ?? 1500
+        if year < minYear || year > maxYear {
+            return CalendarError(errorCode: .invalidYear, message: "Year must be between \(minYear) and \(maxYear), got \(year)", field: "year", value: year)
         }
         let key = "\(year)-\(month)"
         guard let entry = monthIndex[key] else {

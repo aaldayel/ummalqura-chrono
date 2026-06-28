@@ -134,7 +134,7 @@ def hijri_to_jdn(
     if not entry:
         raise CalendarException(CalendarError(
             error_code=ErrorCode.OUT_OF_RANGE,
-            message=f"Hijri date {year}-{month:02d} is outside the supported range (1300-1700 AH)"
+            message=f"Hijri date {year}-{month:02d} is outside the supported range"
         ))
     
     return entry.first_day_jdn + day - 1
@@ -158,6 +158,14 @@ def jdn_to_hijri(
         raise CalendarException(CalendarError(
             error_code=ErrorCode.OUT_OF_RANGE,
             message=f"JDN {jdn} is before the supported range (first JDN: {sorted_months[0].first_day_jdn})"
+        ))
+
+    last_month = sorted_months[-1]
+    last_valid_jdn = last_month.first_day_jdn + last_month.month_length - 1
+    if jdn > last_valid_jdn:
+        raise CalendarException(CalendarError(
+            error_code=ErrorCode.OUT_OF_RANGE,
+            message=f"JDN {jdn} is after the supported range (last JDN: {last_valid_jdn})"
         ))
 
     # Binary search for the month containing this JDN
@@ -261,10 +269,10 @@ def validate_hijri(
     # Use provided range or fall back to data-driven range from month_index
     if min_year is None:
         years = sorted({m.hijri_year for m in month_index.values()})
-        min_year = years[0] if years else 1300
+        min_year = years[0] if years else 1318
     if max_year is None:
         years = sorted({m.hijri_year for m in month_index.values()})
-        max_year = years[-1] if years else 1700
+        max_year = years[-1] if years else 1500
 
     # Check year range
     if year < min_year or year > max_year:
