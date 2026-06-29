@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -34,12 +35,10 @@ jobs:
           php-version: '8.2'
 
       - name: Install JS dependencies
-        working-directory: packages/js
         run: npm ci
 
       - name: Build JS
-        working-directory: packages/js
-        run: npm run build
+        run: npm run build -w ummalqura-chrono
 
       - name: Install Python dependencies
         working-directory: packages/python
@@ -91,7 +90,6 @@ jobs:
           package main
           import (
             "encoding/json"
-            "fmt"
             "os"
             ummalqura "github.com/ummalqura/ummalqura-chrono-go"
           )
@@ -135,7 +133,7 @@ jobs:
           for lang in ['js', 'py', 'go', 'php']:
             with open(f'/tmp/{lang}-result.json') as f:
               results[lang] = json.load(f)
-          
+
           base = results['js']
           failed = False
           for lang, result in results.items():
@@ -144,7 +142,7 @@ jobs:
               print(f'  js: {json.dumps(base)}')
               print(f'  {lang}: {json.dumps(result)}')
               failed = True
-          
+
           if not failed:
             print('All language implementations produce identical results!')
           else:

@@ -5,18 +5,15 @@ Main module providing public API for calendar conversions.
 """
 
 import json
-import os
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from pathlib import Path
 
 from .types import (
     GregorianDate,
     HijriDate,
-    CalendarDate,
     ConversionResult,
     DayOfWeek,
     MonthInfo,
-    MonthTableData,
     MonthCalendar,
     DayInfo,
     ValidationResult,
@@ -38,7 +35,7 @@ from .core import (
     build_jdn_index,
     get_gregorian_year_range
 )
-from .locale import get_gregorian_month_name, get_hijri_month_name, load_locale
+from .locale import get_gregorian_month_name, get_hijri_month_name
 
 # Library version
 LIBRARY_VERSION = "1.0.0"

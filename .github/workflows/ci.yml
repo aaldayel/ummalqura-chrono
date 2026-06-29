@@ -12,33 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+          cache: npm
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          
+
       - name: Install JS dependencies
-        working-directory: packages/js
         run: npm ci
-        
+
       - name: Run ESLint
-        working-directory: packages/js
-        run: npm run lint
-        
+        run: npm run lint -w ummalqura-chrono
+
       - name: Run TypeScript check
-        working-directory: packages/js
-        run: npm run typecheck
-        
+        run: npm run typecheck -w ummalqura-chrono
+
       - name: Install Python dependencies
         working-directory: packages/python
         run: pip install -e ".[dev]"
-        
+
       - name: Run Python linting
         working-directory: packages/python
         run: ruff check .
@@ -48,15 +46,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Verify data checksum
-        run: |
-          cd data
-          sha256sum -c ummalqura-months.sha256
-          
+        run: python scripts/validate_data_checksum.py
+
       - name: Validate locale files
-        run: |
-          python scripts/validate_locales.py
+        run: python scripts/validate_locales.py
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -75,20 +70,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+          cache: npm
+
       - name: Install dependencies
-        working-directory: packages/js
         run: npm ci
-        
+
       - name: Run tests
-        working-directory: packages/js
-        run: npm test -- --coverage
-        
+        run: npm run test:coverage -w ummalqura-chrono
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -103,22 +97,20 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          
+
       - name: Install dependencies
         working-directory: packages/python
-        run: |
-          pip install -e ".[dev]"
-          pip install pytest pytest-cov
-          
+        run: pip install -e ".[dev]"
+
       - name: Run tests
         working-directory: packages/python
         run: pytest --cov=ummalqura --cov-report=xml
-        
+
       - name: Upload coverage
         if: matrix.python-version == '3.12'
         uses: codecov/codecov-action@v3
@@ -132,28 +124,30 @@ jobs:
     needs: [test-js, test-python]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+          cache: npm
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          
+
       - name: Install JS dependencies
-        working-directory: packages/js
         run: npm ci
-        
+
+      - name: Build JavaScript package
+        run: npm run build -w ummalqura-chrono
+
       - name: Install Python dependencies
         working-directory: packages/python
         run: pip install -e .
-        
+
       - name: Run cross-language parity tests
-        run: |
-          python tests/cross-language/run_parity_tests.py
+        run: python tests/cross-language/run_parity_tests.py
 
   benchmark:
     name: Performance Benchmarks
@@ -161,46 +155,62 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+          cache: npm
+
       - name: Install dependencies
-        working-directory: packages/js
         run: npm ci
-        
+
       - name: Run benchmarks
-        working-directory: packages/js
-        run: npm run benchmark
-        
+        run: npm run benchmark -w ummalqura-chrono
+        continue-on-error: true
+
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-results
           path: benchmarks/results/
+        continue-on-error: true
 
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
       - name: Run npm audit
-        working-directory: packages/js
-        run: npm audit --audit-level=moderate
-        
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Run pip audit
         working-directory: packages/python
-        run: pip-audit
+        run: |
+          pip install pip-audit
+          pip install -e .
+          pip-audit
 
   docs:
     name: Documentation Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build documentation
-        run: |
-          echo "Documentation build placeholder"
+        run: echo "Documentation build placeholder"

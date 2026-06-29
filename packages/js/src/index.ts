@@ -8,9 +8,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-  GregorianDate,
-  HijriDate,
-  CalendarDate,
   ConversionResult,
   DayOfWeek,
   MonthInfo,
@@ -20,8 +17,7 @@ import {
   ValidationResult,
   ConversionOptions,
   LibraryConfig,
-  ErrorCode,
-  CalendarError
+  ErrorCode
 } from './types.js';
 
 import {

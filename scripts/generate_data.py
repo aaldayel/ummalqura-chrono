@@ -122,6 +122,12 @@ def write_data_file(data: dict, path: Path) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def write_file_checksum(path: Path, checksum_file: Path) -> None:
+    """Write GNU sha256sum format for the on-disk JSON file."""
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    checksum_file.write_text(f"{digest}  {path.name}\n", encoding="utf-8")
+
+
 def main() -> None:
     print("Parsing official UmAlQura calendar reference...")
     years = parse_reference_years()
@@ -149,7 +155,7 @@ def main() -> None:
     data["checksum"] = compute_checksum(data)
 
     write_data_file(data, OUTPUT_FILE)
-    CHECKSUM_FILE.write_text(f"{data['checksum']}  ummalqura-months.json\n", encoding="utf-8")
+    write_file_checksum(OUTPUT_FILE, CHECKSUM_FILE)
 
     for package_path in PACKAGE_DATA_PATHS:
         write_data_file(data, package_path)

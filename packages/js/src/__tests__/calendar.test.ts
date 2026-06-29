@@ -33,7 +33,7 @@ describe('UmmAlQuraCalendar', () => {
     calendar = new UmmAlQuraCalendar();
     
     // Load golden values
-    const csvPath = path.join(__dirname, '..', '..', '..', 'tests', 'golden', 'golden-values.csv');
+    const csvPath = path.join(__dirname, '..', '..', '..', '..', 'tests', 'golden', 'golden-values.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     goldenValues = csv.parse(csvContent, {
       columns: true,
