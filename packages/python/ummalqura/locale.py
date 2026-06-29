@@ -6,9 +6,8 @@ Falls back to hard-coded defaults for 'en' and 'ar'.
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 from functools import lru_cache
 from dataclasses import dataclass
 

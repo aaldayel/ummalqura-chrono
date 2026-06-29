@@ -5,7 +5,7 @@
  * No global mutable state is used.
  */
 
-import { MonthInfo, MonthTableData, DayOfWeek, ErrorCode, CalendarError } from './types.js';
+import { MonthInfo, DayOfWeek, ErrorCode, CalendarError } from './types.js';
 
 // Umm al-Qura leap year positions (mod 30)
 const UMM_AL_QURA_LEAP_YEARS = new Set([2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29]);
